@@ -10,8 +10,8 @@
 
     <canvas
       ref="canvas"
-      :width="canvasWidth"
-      :height="canvasHeight"
+      width="800"
+      height="600"
       @mousedown="startDrawing"
       @mousemove="draw"
       @mouseup="stopDrawing"
@@ -32,18 +32,12 @@ export default {
       currentStroke: [],
       strokes: [],
       ctx: null,
-      socket: null,
-      canvasWidth: 800,
-      canvasHeight: 600
+      socket: null
     };
   },
   mounted() {
     const canvas = this.$refs.canvas;
     this.ctx = canvas.getContext("2d");
-
-    // Adjust for mobile view
-    this.resizeCanvas();
-    window.addEventListener("resize", this.resizeCanvas);
 
     // Connect to backend
     this.socket = new WebSocket("wss://web-production-0f84.up.railway.app/ws");
@@ -67,16 +61,7 @@ export default {
       }
     };
   },
-  beforeUnmount() {
-    window.removeEventListener("resize", this.resizeCanvas);
-  },
   methods: {
-    resizeCanvas() {
-      const maxWidth = window.innerWidth - 40; // padding
-      this.canvasWidth = maxWidth < 800 ? maxWidth : 800;
-      this.canvasHeight = (this.canvasWidth / 4) * 3; // Keep aspect ratio
-      this.redrawAll();
-    },
     sendMessage(data) {
       if (this.socket && this.socket.readyState === WebSocket.OPEN) {
         this.socket.send(JSON.stringify(data));
@@ -155,7 +140,7 @@ export default {
       this.ctx.stroke();
     },
     redrawAll() {
-      this.ctx.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
+      this.ctx.clearRect(0, 0, this.$refs.canvas.width, this.$refs.canvas.height);
       for (const stroke of this.strokes) {
         this.drawLine(stroke);
       }
@@ -167,7 +152,7 @@ export default {
     },
     clearCanvas() {
       this.strokes = [];
-      this.ctx.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
+      this.ctx.clearRect(0, 0, this.$refs.canvas.width, this.$refs.canvas.height);
       this.sendMessage({ type: "clear" });
     }
   }
@@ -180,7 +165,7 @@ export default {
   text-align: center;
   background: linear-gradient(135deg, #ece9e6, #ffffff);
   min-height: 100vh;
-  padding-top: 80px;
+  padding: 20px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -194,18 +179,14 @@ h2 {
 }
 
 #controls {
-  position: fixed;
-  top: 15px;
-  left: 50%;
-  transform: translateX(-50%);
   display: flex;
   align-items: center;
   background: white;
   padding: 10px 20px;
   border-radius: 8px;
   box-shadow: 0px 4px 12px rgba(0,0,0,0.08);
+  margin-bottom: 20px;
   gap: 10px;
-  z-index: 10;
 }
 
 input[type="color"] {
@@ -243,27 +224,5 @@ canvas {
   border-radius: 10px;
   box-shadow: 0px 4px 20px rgba(0,0,0,0.1);
   touch-action: none;
-  max-width: 100%;
-  height: auto;
-}
-
-/* Mobile adjustments */
-@media (max-width: 600px) {
-  #controls {
-    flex-wrap: wrap;
-    gap: 8px;
-    padding: 8px 12px;
-    justify-content: center;
-  }
-
-  input[type="color"] {
-    width: 35px;
-    height: 35px;
-  }
-
-  button {
-    padding: 8px 14px;
-    font-size: 14px;
-  }
 }
 </style>
